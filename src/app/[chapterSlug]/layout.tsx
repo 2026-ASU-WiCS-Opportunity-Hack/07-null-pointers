@@ -1,3 +1,4 @@
+import { connection } from "next/server";
 import { notFound } from "next/navigation";
 
 import { ChapterNavigation } from "../../components/ChapterNavigation";
@@ -11,6 +12,7 @@ export default async function ChapterLayout({
   children: React.ReactNode;
   params: Promise<{ chapterSlug: string }>;
 }) {
+  await connection();
   const { chapterSlug } = await params;
   const chapter = await getChapterBySlug(chapterSlug);
 

@@ -1,3 +1,5 @@
+import { connection } from "next/server";
+
 import { Navigation } from "../../components/Navigation";
 import { Chapters } from "../../components/Chapters";
 import { Footer } from "../../components/Footer";
@@ -9,6 +11,7 @@ import {
 } from "../../lib/db/pages";
 
 export default async function ChaptersPage() {
+  await connection();
   const chapterListings = await listGlobalChapterListings();
   const chapters = await Promise.all(
     chapterListings.map(async (chapter) => {
