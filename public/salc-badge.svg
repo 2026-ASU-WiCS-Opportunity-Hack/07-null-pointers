@@ -1,0 +1,14 @@
+<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="salc-ring" x1="24" y1="28" x2="176" y2="176" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F97316"/>
+      <stop offset="1" stop-color="#FACC15"/>
+    </linearGradient>
+  </defs>
+  <circle cx="100" cy="92" r="66" fill="url(#salc-ring)"/>
+  <circle cx="100" cy="92" r="49" fill="#FFF7ED"/>
+  <path d="M100 54L111.082 76.4536L135.865 80.0544L117.932 97.5368L122.165 122.22L100 110.568L77.8353 122.22L82.0678 97.5368L64.1353 80.0544L88.9179 76.4536L100 54Z" fill="#EA580C"/>
+  <path d="M80 142L68 178L100 162L132 178L120 142" fill="#C2410C"/>
+  <text x="100" y="97" text-anchor="middle" font-family="Arial, sans-serif" font-size="23" font-weight="700" fill="white">SALC</text>
+  <text x="100" y="193" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="700" fill="#0F172A">SENIOR</text>
+</svg>

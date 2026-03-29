@@ -1,0 +1,18 @@
+<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="calc-ring" x1="30" y1="20" x2="170" y2="180" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2563EB"/>
+      <stop offset="1" stop-color="#14B8A6"/>
+    </linearGradient>
+    <linearGradient id="calc-core" x1="56" y1="48" x2="144" y2="152" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#EFF6FF"/>
+      <stop offset="1" stop-color="#DBEAFE"/>
+    </linearGradient>
+  </defs>
+  <circle cx="100" cy="92" r="66" fill="url(#calc-ring)"/>
+  <circle cx="100" cy="92" r="48" fill="url(#calc-core)" opacity="0.98"/>
+  <path d="M100 62L109.271 80.7861L130 83.7984L115 98.4207L118.542 119.064L100 109.322L81.458 119.064L85 98.4207L70 83.7984L90.7295 80.7861L100 62Z" fill="#2563EB"/>
+  <path d="M77 141L63 179L100 159L137 179L123 141" fill="#1D4ED8"/>
+  <text x="100" y="96" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="white">CALC</text>
+  <text x="100" y="193" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="700" fill="#0F172A">CERTIFIED</text>
+</svg>

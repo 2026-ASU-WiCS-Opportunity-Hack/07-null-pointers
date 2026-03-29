@@ -21,27 +21,30 @@ export function Navigation() {
   <Link href="/about" className="text-gray-600 hover:text-gray-900 transition-colors">
     About Us
   </Link>
-  <Link href="/#certification" className="text-gray-600 hover:text-gray-900 transition-colors">
+  <Link href="/certification" className="text-gray-600 hover:text-gray-900 transition-colors">
     Certification
   </Link>
-  <Link href="/#directory" className="text-gray-600 hover:text-gray-900 transition-colors">
+  <Link href="/directory" className="text-gray-600 hover:text-gray-900 transition-colors">
     Directory
   </Link>
-  <Link href="/#events" className="text-gray-600 hover:text-gray-900 transition-colors">
+  <Link href="/events" className="text-gray-600 hover:text-gray-900 transition-colors">
     Events
   </Link>
   <Link href="/chapters" className="text-gray-600 hover:text-gray-900 transition-colors">
     Chapters
   </Link>
-  <Link href="/#contact" className="text-gray-600 hover:text-gray-900 transition-colors">
+  <Link href="/contact" className="text-gray-600 hover:text-gray-900 transition-colors">
     Contact
   </Link>
 </div>
 
           {/* Sign In Button */}
-          <button className="px-6 py-2 text-gray-700 hover:text-gray-900 font-medium transition-colors">
+          <Link
+            href="/signin"
+            className="px-6 py-2 text-gray-700 hover:text-gray-900 font-medium transition-colors"
+          >
             Sign In
-          </button>
+          </Link>
 
         </div>
       </div>

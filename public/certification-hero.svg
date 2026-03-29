@@ -1,0 +1,43 @@
+<svg width="960" height="720" viewBox="0 0 960 720" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="960" height="720" rx="36" fill="#031525"/>
+  <circle cx="180" cy="118" r="120" fill="#1D4ED8" fill-opacity="0.22"/>
+  <circle cx="768" cy="590" r="150" fill="#14B8A6" fill-opacity="0.18"/>
+  <rect x="78" y="88" width="804" height="544" rx="28" fill="#0B2239" stroke="rgba(255,255,255,0.08)"/>
+  <path d="M180 476C263 381.333 356.667 334 461 334C565.333 334 666.333 381.333 764 476" stroke="url(#path)" stroke-width="14" stroke-linecap="round"/>
+  <circle cx="182" cy="476" r="18" fill="#60A5FA"/>
+  <circle cx="376" cy="372" r="18" fill="#34D399"/>
+  <circle cx="570" cy="372" r="18" fill="#F59E0B"/>
+  <circle cx="764" cy="476" r="18" fill="#8B5CF6"/>
+  <g>
+    <rect x="122" y="148" width="120" height="120" rx="28" fill="#12385E"/>
+    <circle cx="182" cy="208" r="38" fill="#2563EB"/>
+    <text x="182" y="217" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="white">CALC</text>
+  </g>
+  <g>
+    <rect x="318" y="248" width="120" height="120" rx="28" fill="#103B39"/>
+    <circle cx="378" cy="308" r="38" fill="#0F766E"/>
+    <text x="378" y="317" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="white">PALC</text>
+  </g>
+  <g>
+    <rect x="510" y="248" width="120" height="120" rx="28" fill="#51250F"/>
+    <circle cx="570" cy="308" r="38" fill="#EA580C"/>
+    <text x="570" y="317" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="white">SALC</text>
+  </g>
+  <g>
+    <rect x="706" y="148" width="120" height="120" rx="28" fill="#2A1F52"/>
+    <circle cx="766" cy="208" r="38" fill="#7C3AED"/>
+    <text x="766" y="217" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="white">MALC</text>
+  </g>
+  <rect x="122" y="520" width="706" height="60" rx="18" fill="white" fill-opacity="0.06"/>
+  <text x="152" y="558" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="white">Foundational learning</text>
+  <text x="444" y="558" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="white">Applied practice</text>
+  <text x="654" y="558" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="white">Leadership</text>
+  <defs>
+    <linearGradient id="path" x1="180" y1="410" x2="764" y2="410" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#60A5FA"/>
+      <stop offset="0.35" stop-color="#34D399"/>
+      <stop offset="0.7" stop-color="#F59E0B"/>
+      <stop offset="1" stop-color="#8B5CF6"/>
+    </linearGradient>
+  </defs>
+</svg>

@@ -1,4 +1,5 @@
 import { Globe, Mail } from "lucide-react";
+import Link from "next/link";
 import { FaLinkedin, FaTwitter, FaFacebook } from "react-icons/fa";
 
 export function Footer() {
@@ -57,9 +58,9 @@ export function Footer() {
                 </a>
               </li>
               <li>
-                <a href="#directory" className="hover:text-white transition-colors">
+                <Link href="/directory" className="hover:text-white transition-colors">
                   Directory
-                </a>
+                </Link>
               </li>
               <li>
                 <a href="#" className="hover:text-white transition-colors">
@@ -73,24 +74,24 @@ export function Footer() {
             <h3 className="text-white font-bold mb-4">Certification</h3>
             <ul className="space-y-2">
               <li>
-                <a href="#" className="hover:text-white transition-colors">
+                <Link href="/certification" className="hover:text-white transition-colors">
                   CALC Program
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="hover:text-white transition-colors">
+                <Link href="/certification" className="hover:text-white transition-colors">
                   PALC Program
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="hover:text-white transition-colors">
+                <Link href="/certification" className="hover:text-white transition-colors">
                   SALC Program
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="hover:text-white transition-colors">
+                <Link href="/certification" className="hover:text-white transition-colors">
                   Get Certified
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
@@ -99,9 +100,9 @@ export function Footer() {
             <h3 className="text-white font-bold mb-4">Support</h3>
             <ul className="space-y-2">
               <li>
-                <a href="#contact" className="hover:text-white transition-colors">
+                <Link href="/contact" className="hover:text-white transition-colors">
                   Contact
-                </a>
+                </Link>
               </li>
               <li>
                 <a href="#" className="hover:text-white transition-colors">

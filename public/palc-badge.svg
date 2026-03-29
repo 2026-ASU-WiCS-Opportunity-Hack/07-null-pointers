@@ -1,0 +1,16 @@
+<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="palc-ring" x1="26" y1="26" x2="170" y2="178" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0F766E"/>
+      <stop offset="1" stop-color="#84CC16"/>
+    </linearGradient>
+  </defs>
+  <circle cx="100" cy="92" r="66" fill="url(#palc-ring)"/>
+  <circle cx="100" cy="92" r="49" fill="#ECFDF5"/>
+  <circle cx="100" cy="92" r="33" fill="#10B981" opacity="0.18"/>
+  <path d="M100 58L125 72.5V111.5L100 126L75 111.5V72.5L100 58Z" fill="#0F766E"/>
+  <path d="M100 74L113.856 82V98L100 106L86.1436 98V82L100 74Z" fill="#D1FAE5"/>
+  <path d="M79 143L65 180L100 162L135 180L121 143" fill="#047857"/>
+  <text x="100" y="97" text-anchor="middle" font-family="Arial, sans-serif" font-size="23" font-weight="700" fill="#0F172A">PALC</text>
+  <text x="100" y="193" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="700" fill="#0F172A">PROFESSIONAL</text>
+</svg>
