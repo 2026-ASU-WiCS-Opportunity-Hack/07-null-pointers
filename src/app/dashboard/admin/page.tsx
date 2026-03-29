@@ -5,11 +5,15 @@ import {
   CalendarDays,
   Building2,
   PlusCircle,
+  CreditCard,
+  Wallet,
+  AlertCircle,
 } from "lucide-react";
 
 import { getCurrentAppUser } from "../../../lib/auth/current-user";
 import { getUserDisplayName } from "../../../lib/auth/display-name";
 import { getAdminDashboardData } from "../../../lib/db/admin-dashboard";
+import { formatCurrency, getCoachDuesAmountCents } from "../../../lib/payments/stripe";
 
 function getBannerMessage(params: Record<string, string | string[] | undefined>) {
   if (params.created === "1") {
@@ -99,6 +103,21 @@ function formatRoleLabel(role: string) {
     .join(" ");
 }
 
+function formatPaymentStatusLabel(status: string) {
+  switch (status) {
+    case "paid":
+      return "Paid";
+    case "pending":
+      return "Pending";
+    case "failed":
+      return "Failed";
+    case "canceled":
+      return "Canceled";
+    default:
+      return "Not Paid";
+  }
+}
+
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
 export default async function AdminDashboardPage({
@@ -124,6 +143,7 @@ export default async function AdminDashboardPage({
   const params = await searchParams;
   const bannerMessage = getBannerMessage(params);
   const currentUserDisplayName = getUserDisplayName(currentUser.user);
+  const coachDuesAmountCents = getCoachDuesAmountCents();
 
   return (
     <main className="min-h-screen bg-[#f7f8fb] px-6 py-24">
@@ -160,7 +180,7 @@ export default async function AdminDashboardPage({
           </section>
         ) : null}
 
-        <section className="grid gap-5 md:grid-cols-3">
+        <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-6">
           <div className="rounded-[1.5rem] border border-slate-200 bg-white p-6 shadow-[0_12px_35px_rgba(15,23,42,0.08)]">
             <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-100 text-blue-600">
               <Building2 className="h-6 w-6" />
@@ -189,6 +209,108 @@ export default async function AdminDashboardPage({
               {dashboardData.stats.eventCount}
             </div>
             <p className="mt-2 text-slate-600">Seeded chapter events</p>
+          </div>
+
+          <div className="rounded-[1.5rem] border border-slate-200 bg-white p-6 shadow-[0_12px_35px_rgba(15,23,42,0.08)]">
+            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-600">
+              <Wallet className="h-6 w-6" />
+            </div>
+            <div className="text-3xl font-bold text-slate-900">
+              {formatCurrency(dashboardData.paymentSummary.totalRevenueCents)}
+            </div>
+            <p className="mt-2 text-slate-600">Total dues collected</p>
+          </div>
+
+          <div className="rounded-[1.5rem] border border-slate-200 bg-white p-6 shadow-[0_12px_35px_rgba(15,23,42,0.08)]">
+            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-100 text-blue-600">
+              <CreditCard className="h-6 w-6" />
+            </div>
+            <div className="text-3xl font-bold text-slate-900">
+              {dashboardData.paymentSummary.paidCoachCount}
+            </div>
+            <p className="mt-2 text-slate-600">Coaches marked paid</p>
+          </div>
+
+          <div className="rounded-[1.5rem] border border-slate-200 bg-white p-6 shadow-[0_12px_35px_rgba(15,23,42,0.08)]">
+            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-100 text-amber-600">
+              <AlertCircle className="h-6 w-6" />
+            </div>
+            <div className="text-3xl font-bold text-slate-900">
+              {dashboardData.paymentSummary.unpaidCoachCount}
+            </div>
+            <p className="mt-2 text-slate-600">Coaches still unpaid</p>
+          </div>
+        </section>
+
+        <section className="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-[0_12px_35px_rgba(15,23,42,0.08)]">
+          <h2 className="mb-2 text-2xl font-bold text-slate-900">
+            Coach Dues Visibility
+          </h2>
+          <p className="mb-6 text-slate-600">
+            Coaches initiate dues payments from their own dashboard through Stripe. This admin view is read-only and shows current payment visibility across the network.
+          </p>
+
+          <div className="mb-6 rounded-[1.5rem] border border-slate-200 bg-[#f7f8fb] p-5">
+            <p className="text-sm font-medium uppercase tracking-[0.16em] text-blue-600">
+              Coach dues amount
+            </p>
+            <p className="mt-2 text-2xl font-bold text-slate-900">
+              {formatCurrency(coachDuesAmountCents)}
+            </p>
+            <p className="mt-2 text-sm text-slate-600">
+              Pending payments stay visible here until Stripe checkout completes and the status updates.
+            </p>
+          </div>
+
+          <div className="grid gap-4">
+            {dashboardData.paymentRecords.length > 0 ? (
+              dashboardData.paymentRecords.map((payment) => (
+                <div
+                  key={payment.coachId}
+                  className="rounded-[1.5rem] border border-slate-200 bg-[#f7f8fb] p-5"
+                >
+                  <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                    <div>
+                      <h3 className="text-lg font-bold text-slate-900">
+                        {payment.coachName}
+                      </h3>
+                      <p className="mt-1 text-slate-600">
+                        {payment.chapterName} · /{payment.chapterSlug}
+                      </p>
+                      <p className="mt-2 text-sm text-slate-500">
+                        Latest dues amount:{" "}
+                        {formatCurrency(payment.amountCents ?? coachDuesAmountCents, payment.currency)}
+                      </p>
+                      {payment.paidAt ? (
+                        <p className="mt-1 text-sm text-slate-500">
+                          Paid on {new Date(payment.paidAt).toLocaleString()}
+                        </p>
+                      ) : payment.createdAt ? (
+                        <p className="mt-1 text-sm text-slate-500">
+                          Last checkout started on {new Date(payment.createdAt).toLocaleString()}
+                        </p>
+                      ) : null}
+                    </div>
+
+                    <span
+                      className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] ${
+                        payment.status === "paid"
+                          ? "bg-emerald-100 text-emerald-700"
+                          : payment.status === "pending"
+                            ? "bg-amber-100 text-amber-700"
+                            : "bg-white text-slate-700"
+                      }`}
+                    >
+                      {formatPaymentStatusLabel(payment.status)}
+                    </span>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="rounded-[1.5rem] border border-slate-200 bg-[#f7f8fb] p-5 text-slate-600">
+                No coach payment activity has been recorded yet.
+              </div>
+            )}
           </div>
         </section>
 

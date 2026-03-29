@@ -1,33 +1,22 @@
 "use client";
 
 import Link from "next/link";
-import { useDeferredValue, useState } from "react";
+import { useDeferredValue, useEffect, useState } from "react";
 import { Globe2, Mail, MapPin, Search, Users } from "lucide-react";
 
+import {
+  matchesCoachKeyword,
+  normalizeDirectoryQuery,
+} from "../lib/coach-search";
 import type { CoachWithChapter } from "../lib/db/coaches";
 import {
   CERTIFICATION_LEVELS,
   type CertificationLevel,
 } from "../types/domain";
 
-function matchesCoach(coach: CoachWithChapter, query: string) {
-  if (!query) {
-    return true;
-  }
-
-  const haystack = [
-    coach.name,
-    coach.chapterName,
-    coach.chapterSlug,
-    coach.location ?? "",
-    coach.bio ?? "",
-    coach.contactEmail ?? "",
-    ...coach.languages,
-  ]
-    .join(" ")
-    .toLowerCase();
-
-  return haystack.includes(query);
+interface DirectorySearchResponse {
+  mode: "semantic" | "fallback";
+  results: CoachWithChapter[];
 }
 
 export function GlobalDirectoryExperience({
@@ -39,16 +28,81 @@ export function GlobalDirectoryExperience({
   const [certificationFilter, setCertificationFilter] = useState<
     "all" | CertificationLevel
   >("all");
+  const [semanticResults, setSemanticResults] = useState<CoachWithChapter[] | null>(
+    null,
+  );
+  const [searchMode, setSearchMode] = useState<"idle" | "semantic" | "fallback">(
+    "idle",
+  );
   const deferredSearchTerm = useDeferredValue(searchTerm);
-  const normalizedQuery = deferredSearchTerm.trim().toLowerCase();
-  const filteredCoaches = coaches.filter((coach) => {
-    const queryMatch = matchesCoach(coach, normalizedQuery);
+  const normalizedQuery = normalizeDirectoryQuery(deferredSearchTerm);
+  const keywordFilteredCoaches = coaches.filter((coach) => {
+    const queryMatch = matchesCoachKeyword(coach, normalizedQuery);
     const certificationMatch =
       certificationFilter === "all" ||
       coach.certificationLevel === certificationFilter;
 
     return queryMatch && certificationMatch;
   });
+  const filteredCoaches =
+    normalizedQuery && semanticResults ? semanticResults : keywordFilteredCoaches;
+
+  useEffect(() => {
+    if (!normalizedQuery) {
+      return;
+    }
+
+    const controller = new AbortController();
+    const params = new URLSearchParams({
+      q: deferredSearchTerm.trim(),
+    });
+
+    if (certificationFilter !== "all") {
+      params.set("certification", certificationFilter);
+    }
+
+    void fetch(`/api/directory/search?${params.toString()}`, {
+      method: "GET",
+      cache: "no-store",
+      signal: controller.signal,
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error(`Directory search failed: ${response.status}`);
+        }
+
+        return (await response.json()) as DirectorySearchResponse;
+      })
+      .then((payload) => {
+        setSemanticResults(payload.results);
+        setSearchMode(payload.mode);
+      })
+      .catch((error: unknown) => {
+        if (
+          error instanceof Error &&
+          error.name === "AbortError"
+        ) {
+          return;
+        }
+
+        console.error("Semantic directory search failed on the client.", error);
+        setSemanticResults(
+          coaches.filter((coach) => {
+            const queryMatch = matchesCoachKeyword(coach, normalizedQuery);
+            const certificationMatch =
+              certificationFilter === "all" ||
+              coach.certificationLevel === certificationFilter;
+
+            return queryMatch && certificationMatch;
+          }),
+        );
+        setSearchMode("fallback");
+      });
+
+    return () => {
+      controller.abort();
+    };
+  }, [certificationFilter, coaches, deferredSearchTerm, normalizedQuery]);
 
   return (
     <main className="pt-24">
@@ -84,6 +138,25 @@ export function GlobalDirectoryExperience({
               </div>
             </label>
           </div>
+
+          {normalizedQuery ? (
+            <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-600 shadow-sm">
+              <span className="font-medium text-slate-900">
+                {searchMode === "semantic"
+                  ? "AI semantic search active"
+                  : searchMode === "fallback"
+                    ? "Keyword fallback active"
+                    : "Searching across languages..."}
+              </span>
+              <span>
+                {searchMode === "semantic"
+                  ? "Results can match coach profiles written in other languages."
+                  : searchMode === "fallback"
+                    ? "Showing literal text matches while AI search is unavailable."
+                    : "Comparing the query against coach profiles."}
+              </span>
+            </div>
+          ) : null}
 
           <div className="mt-6 grid gap-4 md:grid-cols-3">
             <div className="rounded-[1.5rem] border border-blue-100 bg-white p-6 shadow-[0_12px_35px_rgba(15,23,42,0.06)]">

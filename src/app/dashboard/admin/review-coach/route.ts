@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { refreshCoachSemanticSearchEmbedding } from "../../../../lib/ai/coach-directory-semantic-search";
 import { provisionCognitoUser } from "../../../../lib/auth/cognito-admin";
 import { getCurrentAppUser } from "../../../../lib/auth/current-user";
 import {
@@ -73,6 +74,12 @@ export async function POST(request: NextRequest) {
         review: decision,
         coach: reviewed.name,
       });
+    }
+
+    try {
+      await refreshCoachSemanticSearchEmbedding(reviewed.id);
+    } catch (error) {
+      console.error("Failed to refresh coach embedding after approval.", error);
     }
 
     try {

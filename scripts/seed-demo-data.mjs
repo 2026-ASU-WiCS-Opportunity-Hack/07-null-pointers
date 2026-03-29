@@ -96,7 +96,7 @@ const coaches = [
     certificationLevel: "SALC",
     languages: ["English"],
     location: "Abuja, Nigeria",
-    bio: "Works with public-sector and education leaders on leadership development and practical problem solving.",
+    bio: "Works with public-sector, government, and education leaders on leadership development, team alignment, and practical problem solving.",
     contactEmail: "chinedu.balogun@wial.org",
   },
   {
@@ -105,7 +105,7 @@ const coaches = [
     certificationLevel: "SALC",
     languages: ["Portuguese", "English"],
     location: "Sao Paulo, Brazil",
-    bio: "Supports organizations seeking stronger team performance, leadership alignment, and learning culture.",
+    bio: "Apoia lideres industriais e equipes de manufatura com dinamica de equipe, alinhamento de lideranca e cultura de aprendizagem.",
     contactEmail: "carlos.silva@wial.org",
   },
   {

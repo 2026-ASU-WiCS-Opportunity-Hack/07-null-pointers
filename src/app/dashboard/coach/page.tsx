@@ -4,6 +4,15 @@ import { Globe2, Mail, MapPin, Sparkles, UserRound } from "lucide-react";
 import { getCurrentAppUser } from "../../../lib/auth/current-user";
 import { getUserDisplayName } from "../../../lib/auth/display-name";
 import { getCoachByUserId } from "../../../lib/db/coaches";
+import {
+  getCoachDueDashboardStatus,
+  getLatestCoachDuePaymentByCoachId,
+} from "../../../lib/db/payments";
+import {
+  formatCurrency,
+  getCoachDuesAmountCents,
+  isStripeConfigured,
+} from "../../../lib/payments/stripe";
 
 function getBannerMessage(params: Record<string, string | string[] | undefined>) {
   if (params.saved === "1") {
@@ -20,6 +29,26 @@ function getBannerMessage(params: Record<string, string | string[] | undefined>)
 
   if (params.error === "save-failed") {
     return "Your coach profile could not be updated right now. Please try again.";
+  }
+
+  if (params.payment === "success") {
+    return "Your dues payment was confirmed successfully. The payment status card now reflects the latest Stripe checkout.";
+  }
+
+  if (params.payment === "pending") {
+    return "Your Stripe checkout was created, but the payment is still processing. Refresh in a moment if the status does not update immediately.";
+  }
+
+  if (params.payment === "canceled") {
+    return "The dues checkout was canceled. No payment was recorded.";
+  }
+
+  if (params.payment === "failed") {
+    return "The dues checkout could not be completed right now. Please try again.";
+  }
+
+  if (params.payment === "unavailable") {
+    return "Stripe is not configured for this environment yet, so dues checkout is currently unavailable.";
   }
 
   return null;
@@ -50,6 +79,26 @@ export default async function CoachDashboardPage({
   const params = await searchParams;
   const bannerMessage = getBannerMessage(params);
   const currentUserDisplayName = getUserDisplayName(currentUser.user);
+  const duesAmountCents = getCoachDuesAmountCents();
+  const stripeReady = isStripeConfigured();
+  const latestCoachDuePayment = coachProfile
+    ? await getLatestCoachDuePaymentByCoachId(coachProfile.id)
+    : null;
+  const duesStatus = getCoachDueDashboardStatus(latestCoachDuePayment);
+  const duesStatusLabel = (() => {
+    switch (duesStatus) {
+      case "paid":
+        return "Paid";
+      case "pending":
+        return "Pending";
+      case "failed":
+        return "Payment Failed";
+      case "canceled":
+        return "Canceled";
+      default:
+        return "Not Paid";
+    }
+  })();
 
   return (
     <main className="min-h-screen bg-[#f7f8fb] px-6 py-24">
@@ -89,7 +138,7 @@ export default async function CoachDashboardPage({
 
         {coachProfile ? (
           <>
-            <section className="grid gap-5 md:grid-cols-3">
+            <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
               <div className="rounded-[1.5rem] border border-slate-200 bg-white p-6 shadow-[0_12px_35px_rgba(15,23,42,0.08)]">
                 <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-100 text-blue-600">
                   <Globe2 className="h-6 w-6" />
@@ -118,6 +167,16 @@ export default async function CoachDashboardPage({
                   {coachProfile.approvalStatus}
                 </div>
                 <p className="mt-2 text-slate-600">Directory status</p>
+              </div>
+
+              <div className="rounded-[1.5rem] border border-slate-200 bg-white p-6 shadow-[0_12px_35px_rgba(15,23,42,0.08)]">
+                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-600">
+                  <Mail className="h-6 w-6" />
+                </div>
+                <div className="text-2xl font-bold text-slate-900">
+                  {duesStatusLabel}
+                </div>
+                <p className="mt-2 text-slate-600">Dues payment status</p>
               </div>
             </section>
 
@@ -225,6 +284,65 @@ export default async function CoachDashboardPage({
               </div>
 
               <div className="space-y-6">
+                <section className="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-[0_12px_35px_rgba(15,23,42,0.08)]">
+                  <p className="mb-3 text-sm font-medium uppercase tracking-[0.18em] text-emerald-600">
+                    Pay Dues
+                  </p>
+                  <h2 className="mb-5 text-3xl font-bold text-slate-900">
+                    Stripe checkout for coach dues
+                  </h2>
+
+                  <div className="space-y-5 rounded-[1.75rem] border border-slate-200 bg-[#f7f8fb] p-6">
+                    <div>
+                      <p className="text-sm font-medium uppercase tracking-[0.16em] text-slate-500">
+                        Amount due
+                      </p>
+                      <p className="mt-2 text-3xl font-bold text-slate-900">
+                        {formatCurrency(duesAmountCents)}
+                      </p>
+                      <p className="mt-3 text-slate-600">
+                        Status: <span className="font-semibold text-slate-900">{duesStatusLabel}</span>
+                      </p>
+                      {latestCoachDuePayment?.paidAt ? (
+                        <p className="mt-2 text-sm text-slate-500">
+                          Paid on {new Date(latestCoachDuePayment.paidAt).toLocaleString()}
+                        </p>
+                      ) : latestCoachDuePayment?.createdAt ? (
+                        <p className="mt-2 text-sm text-slate-500">
+                          Latest checkout started on {new Date(latestCoachDuePayment.createdAt).toLocaleString()}
+                        </p>
+                        ) : null}
+                    </div>
+
+                    <div className="rounded-[1.25rem] border border-slate-300 bg-white p-4 shadow-sm">
+                      <p className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                        Payment action
+                      </p>
+                      {stripeReady ? (
+                        <form action="/dashboard/coach/create-payment" method="post">
+                          <button
+                            type="submit"
+                            className="inline-flex w-full items-center justify-center rounded-full border border-black bg-black px-6 py-3 font-semibold text-white shadow-sm transition hover:bg-slate-900"
+                          >
+                            Pay with Stripe
+                          </button>
+                        </form>
+                      ) : (
+                        <div className="inline-flex w-full items-center justify-center rounded-full border border-black bg-white px-6 py-3 font-semibold text-black">
+                          Pay with Stripe
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+
+                  {!stripeReady ? (
+                    <div className="mt-5 rounded-[1.5rem] border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-900">
+                      Add <code>STRIPE_SECRET_KEY</code> and <code>STRIPE_WEBHOOK_SECRET</code> to enable dues checkout.
+                    </div>
+                  ) : null}
+                </section>
+
                 <section className="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-[0_12px_35px_rgba(15,23,42,0.08)]">
                   <p className="mb-3 text-sm font-medium uppercase tracking-[0.18em] text-teal-600">
                     Directory Preview

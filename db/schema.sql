@@ -70,6 +70,32 @@ CREATE TABLE IF NOT EXISTS coaches (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS coach_search_embeddings (
+  coach_id UUID PRIMARY KEY REFERENCES coaches(id) ON DELETE CASCADE,
+  model TEXT NOT NULL,
+  search_document TEXT NOT NULL,
+  embedding_json JSONB NOT NULL,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS coach_due_payments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  coach_id UUID NOT NULL REFERENCES coaches(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  chapter_id UUID NOT NULL REFERENCES chapters(id) ON DELETE CASCADE,
+  amount_cents INTEGER NOT NULL CHECK (amount_cents > 0),
+  currency TEXT NOT NULL DEFAULT 'usd',
+  description TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'pending'
+    CHECK (status IN ('pending', 'paid', 'failed', 'canceled')),
+  stripe_checkout_session_id TEXT UNIQUE,
+  stripe_payment_intent_id TEXT UNIQUE,
+  stripe_customer_email TEXT,
+  paid_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 ALTER TABLE coaches
 ADD COLUMN IF NOT EXISTS submitted_by_user_id UUID REFERENCES users(id) ON DELETE SET NULL;
 
@@ -148,6 +174,12 @@ CREATE UNIQUE INDEX IF NOT EXISTS pages_chapter_unique
 
 CREATE INDEX IF NOT EXISTS coaches_chapter_id_idx ON coaches (chapter_id);
 CREATE INDEX IF NOT EXISTS coaches_certification_level_idx ON coaches (certification_level);
+CREATE INDEX IF NOT EXISTS coach_search_embeddings_updated_at_idx
+  ON coach_search_embeddings (updated_at desc);
+CREATE INDEX IF NOT EXISTS coach_due_payments_coach_id_idx ON coach_due_payments (coach_id);
+CREATE INDEX IF NOT EXISTS coach_due_payments_chapter_id_idx ON coach_due_payments (chapter_id);
+CREATE INDEX IF NOT EXISTS coach_due_payments_status_idx ON coach_due_payments (status);
+CREATE INDEX IF NOT EXISTS coach_due_payments_paid_at_idx ON coach_due_payments (paid_at desc);
 CREATE INDEX IF NOT EXISTS events_chapter_id_idx ON events (chapter_id);
 CREATE INDEX IF NOT EXISTS pages_chapter_id_idx ON pages (chapter_id);
 CREATE INDEX IF NOT EXISTS user_roles_user_id_idx ON user_roles (user_id);
@@ -168,6 +200,12 @@ EXECUTE FUNCTION set_updated_at();
 DROP TRIGGER IF EXISTS coaches_set_updated_at ON coaches;
 CREATE TRIGGER coaches_set_updated_at
 BEFORE UPDATE ON coaches
+FOR EACH ROW
+EXECUTE FUNCTION set_updated_at();
+
+DROP TRIGGER IF EXISTS coach_due_payments_set_updated_at ON coach_due_payments;
+CREATE TRIGGER coach_due_payments_set_updated_at
+BEFORE UPDATE ON coach_due_payments
 FOR EACH ROW
 EXECUTE FUNCTION set_updated_at();
 

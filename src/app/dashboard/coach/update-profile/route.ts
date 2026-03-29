@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { refreshCoachSemanticSearchEmbedding } from "../../../../lib/ai/coach-directory-semantic-search";
 import { getCurrentAppUser } from "../../../../lib/auth/current-user";
 import {
   getCoachByUserId,
@@ -71,6 +72,12 @@ export async function POST(request: NextRequest) {
       return redirectToCoach(request, {
         error: "missing-profile",
       });
+    }
+
+    try {
+      await refreshCoachSemanticSearchEmbedding(updated.id);
+    } catch (error) {
+      console.error("Failed to refresh coach embedding after profile update.", error);
     }
 
     return redirectToCoach(request, {

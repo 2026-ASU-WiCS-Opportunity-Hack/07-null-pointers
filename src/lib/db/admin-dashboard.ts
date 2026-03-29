@@ -1,4 +1,10 @@
 import { queryDb } from "./client";
+import {
+  getAdminCoachPaymentSummary,
+  listAdminCoachPaymentRecords,
+  type AdminCoachPaymentRecord,
+  type AdminCoachPaymentSummary,
+} from "./payments";
 
 export interface AdminDashboardStats {
   chapterCount: number;
@@ -60,6 +66,8 @@ export interface AdminDashboardData {
   coaches: AdminDashboardCoach[];
   accessRecords: AdminDashboardAccessRecord[];
   pendingCoachApprovals: AdminDashboardPendingCoachApproval[];
+  paymentSummary: AdminCoachPaymentSummary;
+  paymentRecords: AdminCoachPaymentRecord[];
 }
 
 interface StatsRow {
@@ -117,7 +125,15 @@ interface PendingCoachApprovalRow {
 }
 
 export async function getAdminDashboardData(): Promise<AdminDashboardData> {
-  const [statsResult, chaptersResult, coachesResult, accessResult, pendingApprovalsResult] =
+  const [
+    statsResult,
+    chaptersResult,
+    coachesResult,
+    accessResult,
+    pendingApprovalsResult,
+    paymentSummary,
+    paymentRecords,
+  ] =
     await Promise.all([
     queryDb<StatsRow>(`
       select
@@ -192,6 +208,8 @@ export async function getAdminDashboardData(): Promise<AdminDashboardData> {
       where coaches.approval_status = 'pending'
       order by chapters.country asc, chapters.name asc, coaches.submitted_at asc
     `),
+    getAdminCoachPaymentSummary(),
+    listAdminCoachPaymentRecords(),
   ]);
 
   const statsRow = statsResult.rows[0];
@@ -246,5 +264,7 @@ export async function getAdminDashboardData(): Promise<AdminDashboardData> {
       submittedByName: row.submitted_by_name,
       submittedAt: row.submitted_at,
     })),
+    paymentSummary,
+    paymentRecords,
   };
 }

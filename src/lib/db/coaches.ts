@@ -30,10 +30,26 @@ interface CoachRow {
   submitted_by_name?: string | null;
 }
 
+interface CoachSearchEmbeddingRow {
+  coach_id: string;
+  model: string;
+  search_document: string;
+  embedding_json: number[];
+  updated_at: string;
+}
+
 export interface CoachWithChapter extends CoachProfile {
   chapterName: string;
   chapterSlug: string;
   chapterCountry?: string;
+}
+
+export interface CoachSearchEmbeddingRecord {
+  coachId: string;
+  model: string;
+  searchDocument: string;
+  embedding: number[];
+  updatedAt: string;
 }
 
 export interface PendingCoachApproval extends CoachProfile {
@@ -88,6 +104,18 @@ function mapCoachWithChapter(row: CoachRow): CoachWithChapter {
     chapterName: row.chapter_name ?? "Unknown Chapter",
     chapterSlug: row.chapter_slug ?? "",
     chapterCountry: row.chapter_country ?? undefined,
+  };
+}
+
+function mapCoachSearchEmbedding(
+  row: CoachSearchEmbeddingRow,
+): CoachSearchEmbeddingRecord {
+  return {
+    coachId: row.coach_id,
+    model: row.model,
+    searchDocument: row.search_document,
+    embedding: row.embedding_json,
+    updatedAt: row.updated_at,
   };
 }
 
@@ -334,7 +362,8 @@ export async function listPublishedCoachesForDirectory() {
         coaches.submitted_at,
         coaches.reviewed_at,
         chapters.name as chapter_name,
-        chapters.slug as chapter_slug
+        chapters.slug as chapter_slug,
+        chapters.country as chapter_country
       from coaches
       inner join chapters on chapters.id = coaches.chapter_id
       where coaches.is_published = true
@@ -344,6 +373,95 @@ export async function listPublishedCoachesForDirectory() {
   );
 
   return result.rows.map(mapCoachWithChapter);
+}
+
+export async function getPublishedCoachForDirectoryById(coachId: string) {
+  const result = await queryDb<CoachRow>(
+    `
+      select
+        coaches.id,
+        coaches.user_id,
+        coaches.chapter_id,
+        coaches.submitted_by_user_id,
+        coaches.reviewed_by_user_id,
+        coaches.name,
+        coaches.certification_level,
+        coaches.languages,
+        coaches.bio,
+        coaches.location,
+        coaches.contact_email,
+        coaches.image_url,
+        coaches.is_published,
+        coaches.approval_status,
+        coaches.review_notes,
+        coaches.submitted_at,
+        coaches.reviewed_at,
+        chapters.name as chapter_name,
+        chapters.slug as chapter_slug,
+        chapters.country as chapter_country
+      from coaches
+      inner join chapters on chapters.id = coaches.chapter_id
+      where coaches.id = $1
+        and coaches.is_published = true
+        and coaches.approval_status = 'approved'
+      limit 1
+    `,
+    [coachId],
+  );
+
+  return result.rows[0] ? mapCoachWithChapter(result.rows[0]) : null;
+}
+
+export async function listCoachSearchEmbeddingsForCoaches(coachIds: string[]) {
+  if (coachIds.length === 0) {
+    return [];
+  }
+
+  const result = await queryDb<CoachSearchEmbeddingRow>(
+    `
+      select coach_id, model, search_document, embedding_json, updated_at
+      from coach_search_embeddings
+      where coach_id = any($1::uuid[])
+    `,
+    [coachIds],
+  );
+
+  return result.rows.map(mapCoachSearchEmbedding);
+}
+
+export async function upsertCoachSearchEmbedding(input: {
+  coachId: string;
+  model: string;
+  searchDocument: string;
+  embedding: number[];
+}) {
+  const result = await queryDb<CoachSearchEmbeddingRow>(
+    `
+      insert into coach_search_embeddings (
+        coach_id,
+        model,
+        search_document,
+        embedding_json,
+        updated_at
+      )
+      values ($1, $2, $3, $4::jsonb, now())
+      on conflict (coach_id)
+      do update set
+        model = excluded.model,
+        search_document = excluded.search_document,
+        embedding_json = excluded.embedding_json,
+        updated_at = now()
+      returning coach_id, model, search_document, embedding_json, updated_at
+    `,
+    [
+      input.coachId,
+      input.model,
+      input.searchDocument,
+      JSON.stringify(input.embedding),
+    ],
+  );
+
+  return mapCoachSearchEmbedding(result.rows[0]);
 }
 
 export async function listPendingCoachApprovals() {
