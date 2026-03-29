@@ -1,6 +1,3 @@
-
-
-
 "use client";
 
 import Image from "next/image";
@@ -16,8 +13,7 @@ import {
   Sparkles,
   Target,
 } from "lucide-react";
-import { motion } from "framer-motion";
-
+import { motion, type Variants } from "framer-motion";
 
 const chapterPoints = [
   { id: 1, name: "USA", x: 21, y: 36 },
@@ -123,16 +119,21 @@ const chips = [
   "Action Learning in practice",
 ];
 
-const fadeUp = {
+
+
+const fadeUp: Variants = {
   hidden: { opacity: 0, y: 28 },
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] },
+    transition: {
+      duration: 0.7,
+      ease: [0.22, 1, 0.36, 1] as const,
+    },
   },
 };
 
-const stagger = {
+const stagger: Variants = {
   hidden: {},
   visible: {
     transition: {
