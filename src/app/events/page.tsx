@@ -3,11 +3,17 @@ import { connection } from "next/server";
 import { Footer } from "../../components/Footer";
 import { Navigation } from "../../components/Navigation";
 import { EventsExperience } from "../../components/EventsExperience";
-import { listPublicEvents } from "../../lib/db/events";
+import { listPublicEvents, type PublicEventWithChapter } from "../../lib/db/events";
 
 export default async function EventsPage() {
   await connection();
-  const events = await listPublicEvents();
+  let events: PublicEventWithChapter[] = [];
+
+  try {
+    events = await listPublicEvents();
+  } catch (error) {
+    console.error("Failed to load public events.", error);
+  }
 
   return (
     <div className="min-h-screen bg-white">

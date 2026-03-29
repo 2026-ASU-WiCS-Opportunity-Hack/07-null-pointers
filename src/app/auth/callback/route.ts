@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { listRoleAssignmentsForUser } from "../../../lib/db/user-roles";
 import { upsertUser } from "../../../lib/db/users";
-import { AUTH_ROUTES, getCognitoConfig } from "../../../lib/auth/config";
+import { AUTH_ROUTES } from "../../../lib/auth/config";
 import { exchangeAuthorizationCode } from "../../../lib/auth/oauth";
 import {
   buildSessionFromIdToken,
@@ -12,12 +12,12 @@ import {
 } from "../../../lib/auth/session";
 import { DASHBOARD_HOME_BY_ROLE } from "../../../types/rbac";
 
-function buildUrl(path: string) {
-  const { appUrl } = getCognitoConfig();
+function buildUrl(path: string, appUrl: string) {
   return new URL(path, appUrl);
 }
 
 export async function GET(request: NextRequest) {
+  const appUrl = request.nextUrl.origin;
   const code = request.nextUrl.searchParams.get("code");
   const state = request.nextUrl.searchParams.get("state");
   const cognitoError = request.nextUrl.searchParams.get("error");
@@ -33,6 +33,7 @@ export async function GET(request: NextRequest) {
         )}&provider_error_description=${encodeURIComponent(
           cognitoErrorDescription ?? "",
         )}`,
+        appUrl,
       ),
     );
     clearAuthStateCookie(response);
@@ -40,19 +41,21 @@ export async function GET(request: NextRequest) {
   }
 
   if (!code) {
-    return NextResponse.redirect(buildUrl(`${AUTH_ROUTES.signIn}?error=missing-code`));
+    return NextResponse.redirect(
+      buildUrl(`${AUTH_ROUTES.signIn}?error=missing-code`, appUrl),
+    );
   }
 
   if (!state || !expectedState || state !== expectedState) {
     const response = NextResponse.redirect(
-      buildUrl(`${AUTH_ROUTES.signIn}?error=state-mismatch`),
+      buildUrl(`${AUTH_ROUTES.signIn}?error=state-mismatch`, appUrl),
     );
     clearAuthStateCookie(response);
     return response;
   }
 
   try {
-    const tokenResponse = await exchangeAuthorizationCode(code);
+    const tokenResponse = await exchangeAuthorizationCode(code, appUrl);
     const session = buildSessionFromIdToken(tokenResponse.idToken);
 
     const user = await upsertUser({
@@ -70,7 +73,7 @@ export async function GET(request: NextRequest) {
 
     if (!primaryRole) {
       const response = NextResponse.redirect(
-        buildUrl(`${AUTH_ROUTES.signIn}?error=missing-role`),
+        buildUrl(`${AUTH_ROUTES.signIn}?error=missing-role`, appUrl),
       );
       setAuthSessionCookie(response, session);
       clearAuthStateCookie(response);
@@ -82,7 +85,7 @@ export async function GET(request: NextRequest) {
         ? "/"
         : DASHBOARD_HOME_BY_ROLE[primaryRole.role];
 
-    const response = NextResponse.redirect(buildUrl(redirectPath));
+    const response = NextResponse.redirect(buildUrl(redirectPath, appUrl));
 
     setAuthSessionCookie(response, session);
     clearAuthStateCookie(response);
@@ -93,7 +96,7 @@ export async function GET(request: NextRequest) {
       error instanceof Error ? error.message : "Unknown authentication error";
 
     const response = NextResponse.redirect(
-      buildUrl(`${AUTH_ROUTES.signIn}?error=auth-failed`),
+      buildUrl(`${AUTH_ROUTES.signIn}?error=auth-failed`, appUrl),
     );
 
     response.headers.set("x-wial-auth-error", description);

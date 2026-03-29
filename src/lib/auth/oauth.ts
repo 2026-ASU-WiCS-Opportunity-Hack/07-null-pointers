@@ -10,18 +10,18 @@ export interface TokenExchangeResponse {
   tokenType: string;
 }
 
-export function getAuthCallbackUrl() {
-  const { appUrl } = getCognitoConfig();
-  return new URL(AUTH_ROUTES.callback, appUrl).toString();
+export function getAuthCallbackUrl(appUrl?: string) {
+  const resolvedAppUrl = appUrl ?? getCognitoConfig().appUrl;
+  return new URL(AUTH_ROUTES.callback, resolvedAppUrl).toString();
 }
 
-export function buildCognitoAuthorizeUrl(state: string) {
+export function buildCognitoAuthorizeUrl(state: string, appUrl?: string) {
   const { domain, appClientId } = getCognitoConfig();
   const url = new URL("/oauth2/authorize", domain);
 
   url.searchParams.set("response_type", "code");
   url.searchParams.set("client_id", appClientId);
-  url.searchParams.set("redirect_uri", getAuthCallbackUrl());
+  url.searchParams.set("redirect_uri", getAuthCallbackUrl(appUrl));
   url.searchParams.set("scope", COGNITO_SCOPES.join(" "));
   url.searchParams.set("state", state);
 
@@ -38,7 +38,7 @@ export function buildCognitoLogoutUrl(returnTo?: string) {
   return url.toString();
 }
 
-export async function exchangeAuthorizationCode(code: string) {
+export async function exchangeAuthorizationCode(code: string, appUrl?: string) {
   const { domain, appClientId, appClientSecret } = getCognitoConfig();
   const headers: Record<string, string> = {
     "Content-Type": "application/x-www-form-urlencoded",
@@ -57,7 +57,7 @@ export async function exchangeAuthorizationCode(code: string) {
       grant_type: "authorization_code",
       client_id: appClientId,
       code,
-      redirect_uri: getAuthCallbackUrl(),
+      redirect_uri: getAuthCallbackUrl(appUrl),
     }),
     cache: "no-store",
   });

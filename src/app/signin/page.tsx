@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
+import { connection } from "next/server";
 import { ArrowRight, ShieldCheck } from "lucide-react";
 
 import { Footer } from "../../components/Footer";
@@ -29,7 +30,14 @@ export default async function SignInPage({
 }: {
   searchParams: SearchParams;
 }) {
-  const currentUser = await getCurrentAppUser();
+  await connection();
+  let currentUser = null;
+
+  try {
+    currentUser = await getCurrentAppUser();
+  } catch (error) {
+    console.error("Failed to resolve current app user on the sign-in page.", error);
+  }
 
   const params = await searchParams;
   const error = typeof params.error === "string" ? params.error : undefined;
